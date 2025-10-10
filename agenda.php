@@ -74,7 +74,7 @@ if(!isset($_SESSION['usuario'])){
 
         .auditorio { color: purple }  /* Naranja */
     .centro { color: rgb(212, 212, 38) }     /* Verde */
-    .aula { color: rgb(48, 201, 48) }       /* Azul */
+    .aula { color: rgba(102, 48, 201, 1) }       /* Azul */
     .cafeteria { color: red }  /* Rosa */
     .lobby { color: #FF8C33; }      /* Naranja claro */
 
