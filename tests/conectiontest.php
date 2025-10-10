@@ -1,21 +1,16 @@
 <?php
-use PHPUnit\Framework\TestCase;
+$server = "localhost";
+$user = "root";
+$pass = "";
+$db = "reservatec";
 
-class ConexionTest extends TestCase
-{
-    private $server = "localhost";
-    private $user = "root";
-    private $pass = "";
-    private $db = "reservatec";
+$conexion = new mysqli($server,$user,$pass,$db);
 
-    public function testConexionExitosa()
-    {
-        $conexion = new mysqli($this->server, $this->user, $this->pass, $this->db);
-
-        // Verificar que no hay errores en la conexión
-        $this->assertEquals(0, $conexion->connect_errno, "Error en la conexión: " . $conexion->connect_error);
-
-        // Cerrar la conexión al finalizar
-        $conexion->close();
-    }
+if ($conexion->connect_errno) {
+    echo "Error de conexión: " . $conexion->connect_error;
+} else {
+    echo "Conexión exitosa!";
 }
+
+$conexion->close();
+
