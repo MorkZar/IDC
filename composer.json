@@ -1,0 +1,16 @@
+{
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+    "psr-4": {
+      "IDC\\": "IDC/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "IDC\\Tests\\": "IDC/TESTS/"
+    }
+}
+}
+
