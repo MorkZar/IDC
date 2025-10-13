@@ -9,7 +9,7 @@ pipeline{
         stage('Test'){
             steps{
                 echo 'Running PHPUnit tests...'
-                bat 'php vendor/bin/phpunit IDC/TESTS'
+                bat 'C:\\xampp\\php\\php.exe vendor\\bin\\phpunit IDC\\TESTS'
             }
         }
         stage('Deploy'){
