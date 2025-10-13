@@ -4,17 +4,19 @@ pipeline{
         stage('Build'){
             steps{
                 echo 'Building...'
+                bat 'composer install'
             }
         }
         stage('Test'){
             steps{
                 echo 'Running PHPUnit tests...'
-                 bat 'vendor\\bin\\phpunit.bat IDC\\TESTS'
+                 bat 'vendor\\bin\\phpunit.bat IDC\\TESTS --log-junit report.xml'
             }
         }
         stage('Deploy'){
             steps{
                 echo 'Deploying...'
+                 junit 'report.xml'
             }
         }
     }
