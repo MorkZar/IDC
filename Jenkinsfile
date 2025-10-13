@@ -8,7 +8,8 @@ pipeline{
         }
         stage('Test'){
             steps{
-                echo 'Testing...'
+                echo 'Running PHPUnit tests...'
+                sh 'php vendor/bin/phpunit IDC/TESTS'
             }
         }
         stage('Deploy'){
