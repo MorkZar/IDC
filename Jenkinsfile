@@ -4,6 +4,8 @@ pipeline{
         stage('Build'){
             steps{
                 echo 'Building...'
+                 // Instalar dependencias de PHP
+                bat 'composer install'
             }
         }
         stage('Test'){
