@@ -4,6 +4,9 @@ namespace IDC\TESTS;
 use PHPUnit\Framework\TestCase;
 use IDC\ConexionBD;
 
+require_once __DIR__ . '/../conexionBD.php';
+
+
 class ConexionBDTest extends TestCase
 {
     private $server = "localhost";
