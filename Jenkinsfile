@@ -10,7 +10,7 @@ pipeline{
         stage('Test'){
             steps{
                 echo 'Running PHPUnit tests...'
-                 bat 'php vendor/bin/phpunit IDC/TESTS --log-junit report.xml'
+                 bat 'php vendor/bin/phpunit TESTS --log-junit report.xml'
             }
         }
         stage('Deploy'){
