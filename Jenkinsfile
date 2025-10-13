@@ -4,7 +4,7 @@ pipeline{
         stage('Build'){
             steps{
                 echo 'Building...'
-                bat 'composer install'
+                //bat 'composer install'
             }
         }
         stage('Test'){
