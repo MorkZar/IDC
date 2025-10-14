@@ -72,6 +72,120 @@ if(!isset($_SESSION['usuario'])){
 </div>
 <?php } ?>
 
+ <script>
+// === Validación en tiempo real de fechas y horas ===
+
+document.addEventListener("DOMContentLoaded", function() {
+    const fechaInput = document.getElementById("fecha");
+    const horaInicioInput = document.getElementById("horai");
+    const horaFinInput = document.getElementById("horaf");
+
+    // Crear contenedores para los mensajes de error dinámicos
+    const errorFecha = document.createElement("p");
+    const errorHora = document.createElement("p");
+    errorFecha.style.color = "red";
+    errorHora.style.color = "red";
+
+    fechaInput.insertAdjacentElement("afterend", errorFecha);
+    horaFinInput.insertAdjacentElement("afterend", errorHora);
+
+    // Escuchar cambios en fecha y horas
+    fechaInput.addEventListener("change", validarFecha);
+    horaInicioInput.addEventListener("change", validarHoras);
+    horaFinInput.addEventListener("change", validarHoras);
+
+    function validarFecha() {
+        const hoy = new Date();
+        const fechaSeleccionada = new Date(fechaInput.value);
+        const tresDiasDespues = new Date(hoy);
+        tresDiasDespues.setDate(hoy.getDate() + 3);
+
+        const diaSemana = fechaSeleccionada.getDay(); // 0=Domingo, 6=Sábado
+        const mes = fechaSeleccionada.getMonth() + 1; // Enero=1
+        const dia = fechaSeleccionada.getDate();
+
+        errorFecha.textContent = "";
+
+        // 1️⃣ Fecha pasada
+        if (fechaSeleccionada < hoy.setHours(0, 0, 0, 0)) {
+            errorFecha.textContent = "🚫 La fecha ingresada ya ha pasado.";
+            fechaInput.setCustomValidity("Fecha inválida");
+            return;
+        }
+
+        // 2️⃣ Menos de 3 días de anticipación
+        if (fechaSeleccionada < tresDiasDespues) {
+            errorFecha.textContent = "🚫 Debes reservar con al menos 3 días de anticipación.";
+            fechaInput.setCustomValidity("Anticipación insuficiente");
+            return;
+        }
+
+        // 3️⃣ Fin de semana
+        if (diaSemana === 0 || diaSemana === 6) {
+            errorFecha.textContent = "🚫 No se puede reservar en fines de semana.";
+            fechaInput.setCustomValidity("Fin de semana no permitido");
+            return;
+        }
+
+        // 4️⃣ Mes no laboral (junio o julio)
+        if (mes === 6 || mes === 7) {
+            errorFecha.textContent = "🚫 No se puede reservar durante junio o julio (vacaciones).";
+            fechaInput.setCustomValidity("Mes no laboral");
+            return;
+        }
+
+        // 5️⃣ Días festivos fijos (mes-día)
+        const diasNoLaborales = ["02-03","03-17","05-01","05-05","05-15","09-16","11-17"];
+        const formatoDiaMes = String(mes).padStart(2, "0") + "-" + String(dia).padStart(2, "0");
+
+        if (diasNoLaborales.includes(formatoDiaMes)) {
+            errorFecha.textContent = "🚫 Día no laborable o festivo.";
+            fechaInput.setCustomValidity("Día no laborable");
+            return;
+        }
+
+        // ✅ Si todo está bien
+        fechaInput.setCustomValidity("");
+        errorFecha.textContent = "";
+    }
+
+    function validarHoras() {
+        const horaInicio = horaInicioInput.value;
+        const horaFin = horaFinInput.value;
+
+        errorHora.textContent = "";
+
+        if (!horaInicio || !horaFin) return;
+
+        // Convertir a minutos para comparar fácilmente
+        const [hIni, mIni] = horaInicio.split(":").map(Number);
+        const [hFin, mFin] = horaFin.split(":").map(Number);
+        const inicioTotal = hIni * 60 + mIni;
+        const finTotal = hFin * 60 + mFin;
+
+        // 1️⃣ Hora fin debe ser mayor que hora inicio
+        if (finTotal <= inicioTotal) {
+            errorHora.textContent = "🚫 La hora de inicio debe ser menor que la hora de finalización.";
+            horaFinInput.setCustomValidity("Hora inválida");
+            return;
+        }
+
+        // 2️⃣ Horarios permitidos: 07:00 - 20:00
+        if (hIni < 7 || hFin > 20) {
+            errorHora.textContent = "🚫 Los horarios permitidos son de 7:00 AM a 8:00 PM.";
+            horaFinInput.setCustomValidity("Fuera de horario permitido");
+            return;
+        }
+
+        // ✅ Si todo está correcto
+        horaFinInput.setCustomValidity("");
+        errorHora.textContent = "";
+    }
+});
+</script>
+
+
+
 <body>
 
 
