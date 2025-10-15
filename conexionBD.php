@@ -24,7 +24,7 @@ class ConexionBD
         $this->db = $db;
         $this->port = $port;
 
-        // Conexión con puerto
+        
         $this->conexion = new \mysqli(
             $this->server,
             $this->user,
