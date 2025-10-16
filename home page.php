@@ -59,7 +59,7 @@ if(!isset($_SESSION['usuario'])){
                     fill="currentColor"
                   ></path>
                 </svg>
-                <span>Visualizar Agenda</span>
+                <span>Visualizar Calendario de Eventos</span>
                 </button>
             <button class="button1" onclick="location.href='peticiones.php'">
                   <svg
