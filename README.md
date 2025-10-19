@@ -1,32 +1,36 @@
-# ReservaTec
+# ReservaTec1
 
-![Project Logo]("C:\xampp\htdocs\xampp\ReservaTec1\imagenes\logo ReservaTec (1).png")
+!\[Project Logo]("C:\\xampp\\htdocs\\xampp\\ReservaTec1\\imagenes\\logo ReservaTec (1).png")
 
 ## Description
+
 ReservaTec es un software desarrollado para el Instituto Tecnológico de Saltillo, específicamente para el edificio de Vinculación.
 El objetivo principal es digitalizar y optimizar la gestión de reservas de espacios, mejorando la organización de eventos y reduciendo
 problemas como duplicidad de solicitudes o procesos manuales ineficientes.
 Con este sistema, estudiantes, docentes y personal administrativo podrán gestionar eventos de manera sencilla, rápida y confiable.
 
 ## Features
+
 👤 Usuarios generales (estudiantes, docentes, externos)
 -Crear una cuenta y autenticarse en el sistema.
 -Consultar el calendario de eventos con disponibilidad en tiempo real.
 -Enviar solicitudes de reservación para espacios disponibles (auditorio, centro de cómputo, aula A1, lobby, cafetería).
 
 🛠️ Administradores (Departamento de Vinculación)
-- Revisar solicitudes recibidas.
--Aceptar o rechazar solicitudes.
--Generar reportes de eventos (diarios, semanales o mensuales).
+
+* Revisar solicitudes recibidas.
+  -Aceptar o rechazar solicitudes.
+  -Generar reportes de eventos (diarios, semanales o mensuales).
 
 ## Getting Started
+
 🛠️ Instalación
 
 STEP 1.Clonar o descargar el proyecto
 Descarga el repositorio desde GitHub o cópialo en tu máquina.
 
 STEP 2.Ubícalo dentro de la carpeta:
-C:\xampp\htdocs\reservatec
+C:\\xampp\\htdocs\\reservatec
 
 STEP 3.Configurar la base de datos
 Inicia XAMPP y activa los servicios Apache y MySQL.
@@ -48,6 +52,7 @@ MySQL (incluido en XAMPP).
 Navegador web actualizado.
 
 ### Usage
+
 Usuarios
 1.Abre XAMPP y activa Apache y MySQL.
 2.Ingresa en tu navegador a:
@@ -57,6 +62,7 @@ o Registrar cuenta (si no tienes).
 Desde la interfaz principal podrás:
 -📅 Consultar el calendario de eventos.
 -📝 Enviar solicitudes de reservación de espacios.
+
 
 
 🔑 Admin
@@ -69,12 +75,16 @@ En la interfaz podras:
 -Descargar reportes en formato PDF.
 
 ## Technologies Used
+
 Frontend: HTML, CSS, JavaScript.
 Backend: PHP.
 Base de datos: MySQL.
 
 ## Contributors
+
 Angel Gabriel Morquecho Pedroza
 
 ## License
+
 This project is licensed under the MIT License
+
