@@ -12,7 +12,7 @@ class ConexionBDTest extends TestCase
     private $server = "localhost";
     private $user = "root";
     private $pass = "";
-    private $db = "reservate";
+    private $db = "reservatec";
     private $port = 33065; 
 
     public function testConexionExitosa()
