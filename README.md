@@ -1,5 +1,5 @@
+# ReservaTec-estuidianteA
 
-# ReservaTecAB
 !\[Project Logo]("C:\\xampp\\htdocs\\xampp\\ReservaTec1\\imagenes\\logo ReservaTec (1).png")
 
 ## Description
