@@ -2,17 +2,17 @@ pipeline {
   agent any
   environment {
     IMAGE_NAME = "idc-app:latest"
-    # Descomenta y configura si harás push al registry
-    # DOCKER_REGISTRY = "registry.example.com/yourproject"
-    # DOCKER_USER = credentials('docker-username-id')
-    # DOCKER_PASSWORD = credentials('docker-password-id')
+    // Descomenta y configura si harás push al registry:
+    // DOCKER_REGISTRY = "registry.example.com/yourproject"
+    // Con credenciales en Jenkins:
+    // DOCKER_USER = credentials('docker-username-id')
+    // DOCKER_PASSWORD = credentials('docker-password-id')
   }
   stages {
     stage('Build') {
       steps {
         script {
           if (isUnix()) {
-            // Buscar composer.json hasta 3 niveles
             sh '''
               echo "Buscando composer.json..."
               FILE=$(find . -maxdepth 3 -name composer.json | head -n 1 || true)
@@ -28,7 +28,7 @@ pipeline {
               composer install --no-interaction --prefer-dist --no-progress
             '''
           } else {
-            // Windows (PowerShell)
+            // Windows: se usa PowerShell dentro de bat
             bat '''
               powershell -NoProfile -Command ^
                 "$file = Get-ChildItem -Path . -Recurse -Filter composer.json -Depth 3 | Select-Object -First 1; ^
@@ -47,7 +47,6 @@ pipeline {
         script {
           if (isUnix()) {
             sh '''
-              # si quieres cambiar el archivo a checar, modifícalo aquí
               FILE=./inicioSesion1.php
               if [ -f "$FILE" ]; then
                 echo "Linting $FILE..."
@@ -77,7 +76,7 @@ pipeline {
             sh '''
               echo "Construyendo imagen Docker..."
               docker build -t ${IMAGE_NAME} .
-              # Si necesitas push, descomenta y configura las variables de entorno
+              # Si necesitas push, descomenta y configura las credenciales arriba
               # echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin $DOCKER_REGISTRY
               # docker tag ${IMAGE_NAME} ${DOCKER_REGISTRY}:${GIT_COMMIT}
               # docker push ${DOCKER_REGISTRY}:${GIT_COMMIT}
@@ -89,7 +88,6 @@ pipeline {
             bat '''
               echo Construyendo imagen Docker...
               docker build -t %IMAGE_NAME% .
-              rem Si haces push, usa login con credenciales configuradas en Jenkins Credentials
               echo Levantando contenedores con docker-compose...
               docker-compose up -d --build
             '''
