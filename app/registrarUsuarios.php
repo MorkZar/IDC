@@ -16,31 +16,25 @@ $tipos_validos = [
 
 $id_tipousuario = isset($tipos_validos[$tipo_usuario]) ? $tipos_validos[$tipo_usuario] : NULL;
 
+
 $nombre_organizacion = $_POST['nombreAdicional'];
 $correo = $_POST['correo'];
-$pass = $_POST['pass'];
+$pass = $_POST['password'];
 //$pass = hash('sha512', $pass);
 
 // Iniciar la transacción
 mysqli_begin_transaction($conexion);
 
 try{
-
-// Validar longitud de la contraseña
-if (strlen($pass) < 8) {
-    die("La contraseña debe tener al menos 8 caracteres.");
-}
-
 // Verificar si el correo ya existe en la base de datos
 $check_email_query = "SELECT * FROM usuarios WHERE correo = '$correo'";
 $result = mysqli_query($conexion, $check_email_query);
 
+session_start(); // Iniciar sesión
+
 if (mysqli_num_rows($result) > 0) {
-    // Si el correo ya existe, mostrar un mensaje de error
-    echo '<script>
-    alert("El correo ya está registrado. Intenta con otro.");
-    window.history.back();
-    </script>';
+    $_SESSION['error_message'] = "El correo ya está registrado. Intenta con otro.";
+    header("Location: registrarse1.php"); // Redirige de vuelta al formulario
     exit;
 }
 
@@ -55,12 +49,8 @@ if (!mysqli_query($conexion, $query)) {
 mysqli_commit($conexion);
 
 // Redirigir si la inserción fue exitosa
-echo'
-<script>
-alert("Cuenta Creada Exitosamente");
-window.location = "inicioSesion.php";
-</script>
-';
+header("Location: inicioSesion1.php?mensaje=success");
+exit;
 } catch (Exception $e) {
 // Revertir los cambios si ocurre un error
 mysqli_rollback($conexion);

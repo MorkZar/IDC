@@ -1,5 +1,3 @@
-<?php
-?>
    
    <!DOCTYPE html>
 <html lang="es">
@@ -18,10 +16,10 @@
     </header>
 
     <div class="botones">
-      <button class="aprobadas">Aprobadas</button>
+      <button class="aprobadas" onclick="location.href='reservacionesAceptadas.php'">Aprobadas</button>
       <button class="pendientes" onclick="location.href='reservacionespendientes.php'">Pendientes</button>
-      <button class="canceladas">Canceladas</button>
-      <button class="reportes" onclick="location.href='reportes.html'">Reportes</button>
+      <button class="canceladas" onclick="location.href='reservacionesRechazadas.php'">Canceladas</button>
+      <button class="reportes" onclick="location.href='reportes.php'">Reportes</button>
     </div>
      <main class="calendar-container">
             <div id="calendar"></div>

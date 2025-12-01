@@ -1,12 +1,12 @@
 <?php
-// registrarPeticiones.php (versión mejorada)
+// registrarPeticiones.php (versión limpia — prepared statements, transacción y validaciones)
 session_start();
 if (!isset($_SESSION['usuario'])) {
     header("Location: inicioSesion1.php");
     exit;
 }
 
-require_once 'conexionBD.php'; // $conexion (mysqli)
+require_once 'conexionBD.php'; // debe definir $conexion (mysqli)
 
 // Habilitar exceptions para mysqli (mejora el manejo de errores)
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -19,7 +19,6 @@ $stmtUser->bind_param("s", $usuarioCorreo);
 $stmtUser->execute();
 $resUser = $stmtUser->get_result();
 if (!$resUser || $resUser->num_rows === 0) {
-    // No existe el usuario en la DB
     header("Location: peticiones.php?mensaje=errorUsuario");
     exit;
 }
@@ -35,7 +34,7 @@ $horai        = $_POST['horai'] ?? '';
 $horaf        = $_POST['horaf'] ?? '';
 $detalles     = trim($_POST['detalles'] ?? '');
 
-// Validaciones básicas (serias) - necesarias antes de insertar
+// Validaciones básicas
 if (!$idespacio || !$nombreEvento || !$fecha || !$horai || !$horaf || !$detalles) {
     header("Location: peticiones.php?mensaje=error");
     exit;
@@ -77,67 +76,14 @@ if ($diaSemana == 6 || $diaSemana == 7) {
 
 // Días no laborables (mm-dd)
 $diasNoLaborables = [
-    '02-03', // Constitucion Mexicana
-    '03-17', // Natalicio de Benito Juarez
-    '09-16', // Independencia
-    '05-01', // Día del Trabajo
-    '05-05', // Batalla de Puebla
-    '05-15', //Dia del Maestro
-    '09-16', //Dia de la Independencia 
-    '11-17', //Dia de la Revolucion
-    '04-14', //Vacaciones Semana Santa
-    '04-15', //Vacaciones Semana Santa
-    '04-16', //Vacaciones Semana Santa
-    '04-17', //Vacaciones Semana Santa
-    '04-18', //Vacaciones Semana Santa
-    '04-21', //Vacaciones Semana Santa
-    '04-22', //Vacaciones Semana Santa
-    '04-23', //Vacaciones Semana Santa
-    '04-24', //Vacaciones Semana Santa
-    '04-25', //Vacaciones Semana Santa
-    '12-14', //Vacaciones Invierno
-    '12-15', //Vacaciones Invierno
-    '12-16', //Vacaciones Invierno
-    '12-17', //Vacaciones Invierno
-    '12-18', //Vacaciones Invierno
-    '12-19', //Vacaciones Invierno
-    '12-20', //Vacaciones Invierno
-    '12-21', //Vacaciones Invierno
-    '12-22', //Vacaciones Invierno
-    '12-23', //Vacaciones Invierno
-    '12-24', //Vacaciones Invierno
-    '12-25', //Vacaciones Invierno
-    '12-26', //Vacaciones Invierno
-    '12-27', //Vacaciones Invierno
-    '12-28', //Vacaciones Invierno
-    '12-29', //Vacaciones Invierno
-    '12-30', //Vacaciones Invierno
-    '12-31', //Vacaciones Invierno
-    '01-01', //Vacaciones Invierno
-    '01-02', //Vacaciones Invierno
-    '01-03', //Vacaciones Invierno
-    '01-04', //Vacaciones Invierno
-    '01-05', //Vacaciones Invierno
-    '01-06', //Vacaciones Invierno
-    '01-07', //Vacaciones Invierno
-    '01-08', //Vacaciones Invierno
-    '01-09', //Vacaciones Invierno
-    '01-10', //Vacaciones Invierno
-    '01-11', //Vacaciones Invierno
-    '01-12', //Vacaciones Invierno
-    '01-13', //Vacaciones Invierno
-    '01-14', //Vacaciones Invierno
-    '01-15', //Vacaciones Invierno
-    '01-16', //Vacaciones Invierno
-    '01-17', //Vacaciones Invierno
-    '01-18', //Vacaciones Invierno
-    '01-19', //Vacaciones Invierno
-    '01-20', //Vacaciones Invierno
-    '01-21', //Vacaciones Invierno
-    '01-22', //Vacaciones Invierno
-    '01-23', //Vacaciones Invierno
-    '01-24', //Vacaciones Invierno
-    '01-25', //Vacaciones Invierno   
+    '02-03','03-17','09-16','05-01','05-05','05-15','11-17',
+    // Vacaciones Semana Santa (ejemplo)
+    '04-14','04-15','04-16','04-17','04-18','04-21','04-22','04-23','04-24','04-25',
+    // Vacaciones Invierno (ejemplo)
+    '12-14','12-15','12-16','12-17','12-18','12-19','12-20','12-21','12-22','12-23',
+    '12-24','12-25','12-26','12-27','12-28','12-29','12-30','12-31',
+    '01-01','01-02','01-03','01-04','01-05','01-06','01-07','01-08','01-09','01-10',
+    // ... puedes completar según necesites
 ];
 $fechaIngresada_md = date("m-d", strtotime($fecha));
 if (in_array($fechaIngresada_md, $diasNoLaborables)) {
@@ -153,7 +99,6 @@ if ($mes === "06" || $mes === "07") {
 }
 
 // Verificar solapamiento con peticiones ACEPTADAS
-// Notar: tu condición original es válida para chequear intervalos (overlap)
 $sqlCheckOverlap = "
     SELECT 1 FROM peticiones
     WHERE id_espacio = ?
@@ -176,9 +121,6 @@ $stmtOverlap->close();
 try {
     $conexion->begin_transaction();
 
-    // Inserción en peticiones
-    // ATENCIÓN: usa el nombre de columna que tengas en tu DB. Aquí usamos "nombreevento" 
-    // porque es tu query original; si tu columna se llama "nombre_evento", cámbialo.
     $sqlInsertPet = "INSERT INTO peticiones (id_espacio, id_usuario, nombreevento, fecha, hora_inicio, hora_fin, peticion, fecha_peticion, estado_peticion)
                      VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 'Procesando')";
     $stmtInsertPet = $conexion->prepare($sqlInsertPet);
@@ -187,21 +129,18 @@ try {
     $id_peticion = $conexion->insert_id;
     $stmtInsertPet->close();
 
-    // Procesar mobiliario: solo los que vienen en mobiliario[] (checkbox marcados)
-    $mobiliariosMarcados = $_POST['mobiliario'] ?? []; // array de ids (strings)
-    $cantidades = $_POST['cantidad'] ?? []; // asociativo: id => cantidad
+    // Procesar mobiliario
+    $mobiliariosMarcados = $_POST['mobiliario'] ?? []; // array de ids
+    $cantidades = $_POST['cantidad'] ?? [];
 
-    // Prepared statements: obtener disponibilidad e insertar solicitud_mobiliario
     $stmtGetDisp = $conexion->prepare("SELECT unidades_disponibles FROM mobiliario WHERE id_mobiliario = ?");
     $stmtInsertSol = $conexion->prepare("INSERT INTO solicitud_mobiliario (id_mobiliario, id_peticion, cantidad) VALUES (?, ?, ?)");
 
     foreach ($mobiliariosMarcados as $id_mob_raw) {
         $id_mob = (int)$id_mob_raw;
-        // si no viene cantidad, tomamos 0 (por hidden)
         $cantidad = isset($cantidades[$id_mob]) ? (int)$cantidades[$id_mob] : 0;
-        if ($cantidad < 0) $cantidad = 0; // sanitización
+        if ($cantidad < 0) $cantidad = 0;
 
-        // Verificar disponibilidad (opcional pero recomendado)
         $stmtGetDisp->bind_param("i", $id_mob);
         $stmtGetDisp->execute();
         $resDisp = $stmtGetDisp->get_result();
@@ -209,13 +148,11 @@ try {
         $disp = $rowDisp ? (int)$rowDisp['unidades_disponibles'] : 0;
 
         if ($cantidad > $disp) {
-            // Si pides más de lo disponible, hacemos rollback y redirigimos con mensaje
             $conexion->rollback();
             header("Location: peticiones.php?mensaje=disponibilidadInsuficiente");
             exit;
         }
 
-        // Insertar en solicitud_mobiliario (permitimos cantidad = 0 para registrar que traen propio)
         $stmtInsertSol->bind_param("iii", $id_mob, $id_peticion, $cantidad);
         $stmtInsertSol->execute();
     }
@@ -223,17 +160,16 @@ try {
     $stmtGetDisp->close();
     $stmtInsertSol->close();
 
-    // Todo OK: commit
     $conexion->commit();
 
     header("Location: peticiones.php?mensaje=success");
     exit;
 
 } catch (Exception $e) {
-    // Si ocurre cualquier error, revertimos
     if ($conexion->in_transaction) $conexion->rollback();
-    // Loguea $e->getMessage() en un log real; aquí devolvemos un mensaje controlado.
+    // Loggear $e->getMessage() en un fichero real es recomendado
     header("Location: peticiones.php?mensaje=error");
     exit;
 }
+?>
 

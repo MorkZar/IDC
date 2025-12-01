@@ -84,4 +84,5 @@ formulario.addEventListener('submit', (e) => {
 	if (!formValido) {
 		e.preventDefault(); // Evita que el formulario se envíe si hay errores
 	}
+
 });

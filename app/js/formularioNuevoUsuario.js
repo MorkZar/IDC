@@ -158,4 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
       campoAdicional.style.display = 'block';
       inputAdicional.setAttribute('required', 'required');
     }
-  });
+});
+
+    
+

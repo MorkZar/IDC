@@ -1,3 +1,4 @@
+
 body {
     font-family: Arial, sans-serif;
     background-color:white;
@@ -175,15 +176,15 @@ button:hover {
 
 /*Estilos de Check Box*/
 .check-box {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 25px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 20px; /* espacio entre filas y columnas */
 }
 
 .check-box label {
-  width: 200px; /* control de cuántas columnas caben */
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 6px; /* espacio entre checkbox y texto */
 }
+
 
