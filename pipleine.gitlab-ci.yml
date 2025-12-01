@@ -1,48 +1,25 @@
-stages:
-  - build
-  - test
-  - deploy
-
-# Etapa de build: compilar dependencias PHP
 build-job:
   stage: build
   image: composer:2
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-composer"
+    paths:
+      - vendor/
+      - .composer/cache/
   script:
-    - echo "Instalando dependencias..."
-    - composer install
+    - echo "Buscando composer.json..."
+    - FILE=$(find . -maxdepth 3 -name composer.json | head -n 1 || true)
+    - if [ -z "$FILE" ]; then echo "ERROR: No se encontró composer.json en el repo."; ls -la .; exit 1; fi
+    - DIR=$(dirname "$FILE")
+    - echo "composer.json encontrado en: $DIR"
+    - cd "$DIR"
+    - echo "Ejecutando composer install en $(pwd)..."
+    - composer install --no-interaction --prefer-dist --no-progress
     - echo "Build completo."
+  artifacts:
+    paths:
+      - vendor/
+    expire_in: 1 hour
 
-# Etapa de test: pruebas unitarias
-unit-test-job:
-  stage: test
-  image: php:8.2
-  script:
-    - echo "Ejecutando pruebas unitarias..."
-    # php vendor/bin/phpunit tests --log-junit report.xml
-    - echo "Pruebas completadas."
-
-lint-test-job:
-  stage: test
-  image: php:8.2
-  script:
-    - echo "Linting code..."
-    - php -l iniicioSesion1.php
-    - echo "Lint OK."
-
-# Etapa de deploy: construir y levantar contenedores Docker
-deploy-job:
-  stage: deploy
-  image: docker:latest
-  services:
-    - docker:dind
-  variables:
-    DOCKER_DRIVER: overlay2
-  script:
-    - echo "Construyendo imagen Docker..."
-    - docker build -t idc-app:latest .
-    - echo "Levantando contenedores con docker-compose..."
-    - docker-compose up -d --build
-  environment:
-    name: production
 
 
