@@ -174,16 +174,61 @@ button:hover {
 }
 
 /*Estilos de Check Box*/
+/* === Estilos de Check Box en cuadrícula === */
 .check-box {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 25px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px 20px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.check-box label {
-  width: 200px; /* control de cuántas columnas caben */
+/* 3 columnas opcional */
+.check-box--cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 520px) {
+  .check-box {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Contenedor de cada ítem */
+.item-mob {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fafafa;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
 }
 
+/* Parte de checkbox + texto */
+.item-mob label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+}
+
+/* Checkbox */
+.item-mob input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b0002;
+  flex-shrink: 0;
+}
+
+/* Input de cantidad (debajo del checkbox) */
+.cantidad-input {
+  width: 60px;
+  padding: 5px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}

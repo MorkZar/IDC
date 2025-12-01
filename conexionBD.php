@@ -13,7 +13,7 @@ class ConexionBD
     public function __construct(
         $server = "localhost",
         $user = "root",
-        $pass = "",
+        $pass = "angel181103",
         $db = "reservatec",
         $port = 33065 // <--- Puerto
     )

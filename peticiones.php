@@ -12,7 +12,7 @@ if(!isset($_SESSION['usuario'])){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/peticiones2.css">
+    <link rel="stylesheet" href="css/peticiones.css">
     <title>Peticiones</title>
 </head>
 
@@ -248,6 +248,30 @@ document.addEventListener("DOMContentLoaded", function() {
                         <label for="horaf">Hora Final:</label>
                         <input type="time" id="horaf" name="horaf" required oninvalid="validarCampo(this, 'Falta seleccionar hora')"
                         oninput="this.setCustomValidity('')">
+
+                         <label>Mobiliario disponible:</label>
+<div class="check-box">
+<?php
+include "conexionBD.php";
+$queryM = "SELECT id_mobiliario, nombre_mobiliario, unidades_disponibles FROM mobiliario";
+$resultM = $conexion->query($queryM);
+
+while ($rowM = $resultM->fetch_assoc()) {
+    $id = $rowM['id_mobiliario'];
+    $nombre = htmlspecialchars($rowM['nombre_mobiliario']);
+    $disp = (int)$rowM['unidades_disponibles'];
+
+    echo "<label>
+            <input type='checkbox' name='mobiliario[]' value='{$id}'>
+            <span class='item-text'>{$nombre} (Disp.: {$disp})</span>
+            <!-- Enviamos siempre un campo cantidad[id] (por defecto 0) -->
+            <input type='hidden' name='cantidad[{$id}]' value='0'>
+            <!-- Input visible para cantidad; el usuario puede poner 0 si trae el suyo -->
+            <input type='number' name='cantidad[{$id}]' min='0' max='{$disp}' value='0' style='width:70px; margin-left:8px;'>
+          </label>";
+}
+?>
+</div>
                     </td>
                     <td class="detalles-con-fondo">
                         <label for="comentarios">Detalles:</label>

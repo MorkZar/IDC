@@ -1,95 +1,81 @@
 <?php
-include 'conexionBD.php';
+// registrarPeticiones.php (versión mejorada)
 session_start();
-
-$usuario = $_SESSION['usuario']; 
 if (!isset($_SESSION['usuario'])) {
-    header("location: inicioSesion1.php");
-    session_destroy();
+    header("Location: inicioSesion1.php");
     exit;
 }
 
-// Obtener el id_usuario del correo
-$query3 = "SELECT id_usuario FROM usuarios WHERE correo = '$usuario'"; 
-$result3 = $conexion->query($query3);
+require_once 'conexionBD.php'; // $conexion (mysqli)
 
-if ($result3 && $result3->num_rows > 0) {
-    $row = $result3->fetch_assoc();
-    $id_usuario = $row['id_usuario']; 
-} else {
-    echo "<p>No se encontró el solicitante</p>";
+// Habilitar exceptions para mysqli (mejora el manejo de errores)
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+$usuarioCorreo = $_SESSION['usuario'];
+
+// Obtener id_usuario de forma segura
+$stmtUser = $conexion->prepare("SELECT id_usuario FROM usuarios WHERE correo = ?");
+$stmtUser->bind_param("s", $usuarioCorreo);
+$stmtUser->execute();
+$resUser = $stmtUser->get_result();
+if (!$resUser || $resUser->num_rows === 0) {
+    // No existe el usuario en la DB
+    header("Location: peticiones.php?mensaje=errorUsuario");
+    exit;
+}
+$rowU = $resUser->fetch_assoc();
+$id_usuario = (int)$rowU['id_usuario'];
+$stmtUser->close();
+
+// Recogida y sanitización de campos
+$idespacio    = isset($_POST['espacio']) ? (int)$_POST['espacio'] : 0;
+$nombreEvento = trim($_POST['nombreEvento'] ?? '');
+$fecha        = $_POST['fecha'] ?? '';
+$horai        = $_POST['horai'] ?? '';
+$horaf        = $_POST['horaf'] ?? '';
+$detalles     = trim($_POST['detalles'] ?? '');
+
+// Validaciones básicas (serias) - necesarias antes de insertar
+if (!$idespacio || !$nombreEvento || !$fecha || !$horai || !$horaf || !$detalles) {
+    header("Location: peticiones.php?mensaje=error");
     exit;
 }
 
-// Obtener datos del formulario
-$idespacio = $_POST['espacio'];
-$nombreEvento = $_POST['nombreEvento'];
-$fecha = $_POST['fecha'];
-$horai = $_POST['horai'];
-$horaf = $_POST['horaf'];
-$detalles = $_POST['detalles'];
-
-// Validaciones de hora (antes de insertar)
+// Validar horas (07:00 - 20:00) y orden temporal
 $horaInicio = strtotime($horai);
-$horaFin = strtotime($horaf);
+$horaFin    = strtotime($horaf);
 $horaMinima = strtotime("07:00");
 $horaMaxima = strtotime("20:00");
 
 if ($horaInicio >= $horaFin) {
     header("Location: peticiones.php?mensaje1=back");
-  exit;
+    exit;
+}
+if ($horaInicio < $horaMinima || $horaFin > $horaMaxima) {
+    header("Location: peticiones.php?mensaje2=back1");
+    exit;
 }
 
-if (
-    $horaInicio < $horaMinima || $horaInicio > $horaMaxima ||
-    $horaFin < $horaMinima || $horaFin > $horaMaxima
-) {
-  header("Location: peticiones.php?mensaje2=back1");
-  exit;
-}
-
-// Validar que la fecha no sea pasada
+// Fecha no pasada y anticipación >= 3 días
 $fechaActual = date("Y-m-d");
-
 if ($fecha < $fechaActual) {
     header("Location: peticiones.php?mensaje3=fechaPasada");
     exit;
 }
-
-// Validar que se reserve con al menos 3 días de anticipación
 $fechaLimite = date("Y-m-d", strtotime($fechaActual . " +3 days"));
 if ($fecha < $fechaLimite) {
     header("Location: peticiones.php?mensaje4=anticipacionInsuficiente");
     exit;
 }
 
-$queryValidacion = "
-    SELECT * FROM peticiones 
-    WHERE id_espacio = '$idespacio' 
-      AND fecha = '$fecha' 
-      AND estado_peticion = 'Aceptada'
-      AND (
-            (hora_inicio < '$horaf' AND hora_fin > '$horai')
-          )
-";
-
-$resultValidacion = mysqli_query($conexion, $queryValidacion);
-
-if (mysqli_num_rows($resultValidacion) > 0) {
-    // Ya hay una reserva aceptada que choca con este horario
-    header("Location: peticiones.php?mensaje5=ocupado");
-    exit;
-}
-
-// Validar si la fecha es sábado (6) o domingo (7)
-$diaSemana = date('N', strtotime($fecha));
-
+// Validar fin de semana
+$diaSemana = date('N', strtotime($fecha)); // 1..7
 if ($diaSemana == 6 || $diaSemana == 7) {
     header("Location: peticiones.php?mensaje7=finDeSemana");
     exit;
 }
 
-// ✅ Días no laborales fijos (solo día y mes, ignorando el año)
+// Días no laborables (mm-dd)
 $diasNoLaborables = [
     '02-03', // Constitucion Mexicana
     '03-17', // Natalicio de Benito Juarez
@@ -153,55 +139,101 @@ $diasNoLaborables = [
     '01-24', //Vacaciones Invierno
     '01-25', //Vacaciones Invierno   
 ];
-
-// Obtener solo el día y mes de la fecha ingresada
-$fechaIngresada = date("m-d", strtotime($fecha));
-
-// Verificar si la fecha ingresada es no laborable
-if (in_array($fechaIngresada, $diasNoLaborables)) {
+$fechaIngresada_md = date("m-d", strtotime($fecha));
+if (in_array($fechaIngresada_md, $diasNoLaborables)) {
     header("Location: peticiones.php?mensaje6=fechaNoLaborable");
     exit;
 }
 
-// ✅ Validar si la fecha está dentro de junio o julio y es de lunes a viernes
-$mes = date("m", strtotime($fecha));  // Extraer mes de la fecha
-
-// Validar si el mes es junio (06) o julio (07) y si es entre lunes (1) y viernes (5)
-if (($mes == "06" || $mes == "07")) {
-    // La fecha está en junio o julio y es entre lunes y viernes (no laboral)
+// Meses no laborables (junio/julio)
+$mes = date("m", strtotime($fecha));
+if ($mes === "06" || $mes === "07") {
     header("Location: peticiones.php?mensaje6=fechaNoLaborable");
     exit;
 }
 
-// Iniciar la transacción
-mysqli_begin_transaction($conexion);
+// Verificar solapamiento con peticiones ACEPTADAS
+// Notar: tu condición original es válida para chequear intervalos (overlap)
+$sqlCheckOverlap = "
+    SELECT 1 FROM peticiones
+    WHERE id_espacio = ?
+      AND fecha = ?
+      AND estado_peticion = 'Aceptada'
+      AND (hora_inicio < ? AND hora_fin > ?)
+    LIMIT 1
+";
+$stmtOverlap = $conexion->prepare($sqlCheckOverlap);
+$stmtOverlap->bind_param("isss", $idespacio, $fecha, $horaf, $horai);
+$stmtOverlap->execute();
+$resOverlap = $stmtOverlap->get_result();
+if ($resOverlap && $resOverlap->num_rows > 0) {
+    header("Location: peticiones.php?mensaje5=ocupado");
+    exit;
+}
+$stmtOverlap->close();
+
+// === TRANSACCIÓN: insertar petición y luego solicitud_mobiliario ===
 try {
-    $query1 = "INSERT INTO peticiones (id_espacio, id_usuario, nombreevento, fecha, hora_inicio, hora_fin, peticion)
-               VALUES ('$idespacio', '$id_usuario','$nombreEvento', '$fecha', '$horai', '$horaf', '$detalles')";
+    $conexion->begin_transaction();
 
-    if (!mysqli_query($conexion, $query1)) {
-        throw new Exception("Error al realizar la petición.");
+    // Inserción en peticiones
+    // ATENCIÓN: usa el nombre de columna que tengas en tu DB. Aquí usamos "nombreevento" 
+    // porque es tu query original; si tu columna se llama "nombre_evento", cámbialo.
+    $sqlInsertPet = "INSERT INTO peticiones (id_espacio, id_usuario, nombreevento, fecha, hora_inicio, hora_fin, peticion, fecha_peticion, estado_peticion)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 'Procesando')";
+    $stmtInsertPet = $conexion->prepare($sqlInsertPet);
+    $stmtInsertPet->bind_param("iisssss", $idespacio, $id_usuario, $nombreEvento, $fecha, $horai, $horaf, $detalles);
+    $stmtInsertPet->execute();
+    $id_peticion = $conexion->insert_id;
+    $stmtInsertPet->close();
+
+    // Procesar mobiliario: solo los que vienen en mobiliario[] (checkbox marcados)
+    $mobiliariosMarcados = $_POST['mobiliario'] ?? []; // array de ids (strings)
+    $cantidades = $_POST['cantidad'] ?? []; // asociativo: id => cantidad
+
+    // Prepared statements: obtener disponibilidad e insertar solicitud_mobiliario
+    $stmtGetDisp = $conexion->prepare("SELECT unidades_disponibles FROM mobiliario WHERE id_mobiliario = ?");
+    $stmtInsertSol = $conexion->prepare("INSERT INTO solicitud_mobiliario (id_mobiliario, id_peticion, cantidad) VALUES (?, ?, ?)");
+
+    foreach ($mobiliariosMarcados as $id_mob_raw) {
+        $id_mob = (int)$id_mob_raw;
+        // si no viene cantidad, tomamos 0 (por hidden)
+        $cantidad = isset($cantidades[$id_mob]) ? (int)$cantidades[$id_mob] : 0;
+        if ($cantidad < 0) $cantidad = 0; // sanitización
+
+        // Verificar disponibilidad (opcional pero recomendado)
+        $stmtGetDisp->bind_param("i", $id_mob);
+        $stmtGetDisp->execute();
+        $resDisp = $stmtGetDisp->get_result();
+        $rowDisp = $resDisp->fetch_assoc();
+        $disp = $rowDisp ? (int)$rowDisp['unidades_disponibles'] : 0;
+
+        if ($cantidad > $disp) {
+            // Si pides más de lo disponible, hacemos rollback y redirigimos con mensaje
+            $conexion->rollback();
+            header("Location: peticiones.php?mensaje=disponibilidadInsuficiente");
+            exit;
+        }
+
+        // Insertar en solicitud_mobiliario (permitimos cantidad = 0 para registrar que traen propio)
+        $stmtInsertSol->bind_param("iii", $id_mob, $id_peticion, $cantidad);
+        $stmtInsertSol->execute();
     }
 
-    // Confirmar la transacción
-    mysqli_commit($conexion);
+    $stmtGetDisp->close();
+    $stmtInsertSol->close();
 
-    // Redirigir si la inserción fue exitosa
+    // Todo OK: commit
+    $conexion->commit();
+
     header("Location: peticiones.php?mensaje=success");
     exit;
-} catch (Exception $e) {
-    // Revertir los cambios si ocurre un error
-    mysqli_rollback($conexion);
 
-    // Mostrar el error
-    echo '
-    <script>
-    alert("Error: ' . $e->getMessage() . '");
-    window.history.back();
-    </script>
-    ';
+} catch (Exception $e) {
+    // Si ocurre cualquier error, revertimos
+    if ($conexion->in_transaction) $conexion->rollback();
+    // Loguea $e->getMessage() en un log real; aquí devolvemos un mensaje controlado.
+    header("Location: peticiones.php?mensaje=error");
+    exit;
 }
 
-// Cerrar la conexión
-mysqli_close($conexion);
-?>
