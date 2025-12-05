@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <input type="time" id="horaf" name="horaf" required oninvalid="validarCampo(this, 'Falta seleccionar hora')"
                         oninput="this.setCustomValidity('')">
 
-                         <label>Mobiliario Disponible</label>
+                         <label>Mobiliario Disponible:</label>
 <div class="check-box">
 <?php
 include "conexionBD.php";
